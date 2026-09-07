@@ -22,5 +22,10 @@ The successful run should be stored with these names:
 - `07-remediated-excel-scan-info-sheet.png`: remediated image scan information showing zero vulnerabilities.
 - `08-website-smoke-test.png`: HTTP response or rendered website from `http://localhost:8080`.
 - `09-container-health.png`: Docker health status showing `healthy`.
+- [`10-github-actions-success-summary.png`](10-github-actions-success-summary.png): GitHub Actions security job completed successfully.
+- [`11-github-actions-success-logs.png`](11-github-actions-success-logs.png): detailed GitHub Actions logs supporting the successful run.
+- [`12-github-actions-checks-passed.png`](12-github-actions-checks-passed.png): compact GitHub status card showing all checks passed.
+
+The Node.js 20 deprecation message visible in the logs is a warning from GitHub Actions, not a security-pipeline failure. Keep the screenshot as evidence, but do not describe that warning as an application failure.
 
 Never include `.env` contents, bot tokens, chat IDs, GitHub secrets, or a Telegram API URL containing a token in project screenshots.
