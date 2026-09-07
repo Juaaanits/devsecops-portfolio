@@ -41,6 +41,12 @@ jobs:
           sh /tmp/install-scout.sh
           docker scout version
 
+      - name: Authenticate Docker Hub for Scout
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
       - name: Detect secrets
         run: |
           git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline

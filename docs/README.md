@@ -23,3 +23,5 @@ This folder contains the recruiter-facing explanation and evidence for the DevSe
 ## Evidence policy
 
 The screenshots in this folder are supporting evidence, not the source of truth. The reproducible commands in the root README and the generated reports under `devsecops/reports/` are authoritative for a new run. Do not commit Telegram bot tokens, chat IDs, `.env` files, or screenshots that expose them.
+
+The hosted GitHub Actions workflow authenticates to Docker Hub for Docker Scout using `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN`. Use a read-only token and store it only as GitHub repository secrets.

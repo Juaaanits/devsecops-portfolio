@@ -156,6 +156,11 @@ Add these GitHub repository secrets only if Telegram notifications are wanted:
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 
+Docker Scout also needs Docker Hub credentials in the hosted workflow. Create a Docker Hub access token with the minimum read-only scope and add these GitHub repository secrets:
+
+- `DOCKER_HUB_USERNAME`
+- `DOCKER_HUB_TOKEN`
+
 When a pipeline failure occurs, the notifier attaches `devsecops/reports/vulnerability-report.xlsx`. If that file is unavailable, it sends the failure message without an attachment.
 
 ## Development flow
