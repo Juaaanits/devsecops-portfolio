@@ -1,6 +1,18 @@
-# DevSecOps Portfolio Website
+# DevSecOps Portfolio Project
 
-This project demonstrates a small DevSecOps workflow for a static portfolio website. It builds the website into a Docker image, scans the repository for secrets, scans the image with Docker Scout, generates security reports, and blocks deployment when critical vulnerabilities are found.
+This repository contains a static portfolio website and the DevSecOps workflow around it. I built it as a practical project to show how a code change can move through secret scanning, containerization, vulnerability scanning, reporting, and deployment checks.
+
+## What the project does
+
+- Builds the static website into a small Nginx Docker image.
+- Checks tracked files for accidentally committed secrets with `detect-secrets`.
+- Scans the image with Docker Scout.
+- Converts scan results into SARIF, text, and Excel reports.
+- Blocks deployment when critical vulnerabilities are found.
+- Sends the Excel report to Telegram when notifications are configured.
+- Runs the same checks automatically in GitHub Actions.
+
+The remediated image currently uses `nginx:1.31.5-alpine-slim` pinned by digest. The validation run reported `0C 0H 0M 0L`, returned HTTP 200, and reached a healthy container state.
 
 ## Architecture
 
@@ -20,28 +32,24 @@ flowchart LR
     G --> L
 ```
 
-The existing architecture image is useful as a visual overview, but this diagram is the source of truth for the implementation. The GitHub workflow performs build, scan, reporting, and policy enforcement. The local `CICD.sh` script additionally starts the container after the policy passes.
+![DevSecOps architecture](docs/architecture/architecture-diagram.png)
 
-![Updated DevSecOps architecture](docs/architecture/architecture-diagram.png)
+The local `CICD.sh` script also starts the container after the security check passes. The GitHub Actions workflow builds and checks the image but does not deploy it to production.
 
-## Evidence and remediation
+## Project notes and evidence
 
-Recruiter-facing project evidence is organized under [`docs/`](docs/README.md). The remediation record explains the original vulnerability gate failure, the selected base-image update, and the validation criteria. Screenshots are stored in [`docs/evidence/`](docs/evidence/README.md) with descriptive names.
-
-The security gate is intentionally fail-closed: a critical vulnerability blocks the local deployment and the GitHub Actions job. Remediation means selecting a supported base image, rebuilding the image, rescanning it, and only then accepting the deployment if the critical count is zero.
-
-The current remediated image uses `nginx:1.31.5-alpine-slim` pinned by digest. The validation run produced `0C 0H 0M 0L`, served the site with HTTP 200, and reached a healthy container state. See [`docs/remediation.md`](docs/remediation.md) for the reproducible evidence and remaining improvements.
+The short project explanation is in [`docs/`](docs/README.md). The remediation notes explain the original vulnerability findings, the base-image update, and the validation result. The screenshots and recommendation record are in [`docs/evidence/`](docs/evidence/README.md).
 
 ## Prerequisites
 
-- Python 3.13 or compatible Python 3 version
+- Python 3.13 or another compatible Python 3 version
 - Docker Desktop with the Linux engine running
 - Git
-- Git Bash, WSL, or another Bash-compatible shell for `CICD.sh`
+- Git Bash for `CICD.sh` on Windows
 
-## First-time Python setup
+## Set up the Python environment
 
-Run these commands from the repository root. Create the virtual environment before installing Python dependencies.
+Create the virtual environment before installing the project dependencies:
 
 ```powershell
 python -m venv .venv
@@ -55,9 +63,9 @@ PowerShell activation is optional:
 .\.venv\Scripts\Activate.ps1
 ```
 
-Copy `devsecops/.env.example` to `devsecops/.env` only if Telegram notifications are required. Never commit `.env`.
+Copy `devsecops/.env.example` to `devsecops/.env` only when Telegram notifications are needed. Never commit `.env`.
 
-## Secret scanning setup
+## Run the secret scan
 
 Create and review the baseline once:
 
@@ -73,11 +81,9 @@ pre-commit install
 pre-commit run detect-secrets --all-files
 ```
 
-The baseline is committed so reviewed existing findings do not block every commit. New findings still fail the pre-commit hook and the GitHub Actions job.
+The baseline records reviewed existing findings. New findings still fail the local hook and the GitHub Actions job.
 
-## Build and run locally
-
-The Docker image name is `portfolio-site-secure`.
+## Build and run the website
 
 ```powershell
 docker info
@@ -85,7 +91,7 @@ docker build -f devsecops-portfolio\Dockerfile -t portfolio-site-secure:local .
 docker run --rm -d --name portfolio-site-secure-local -p 8080:80 portfolio-site-secure:local
 ```
 
-Test the website:
+Open `http://localhost:8080`, or test it from PowerShell:
 
 ```powershell
 Invoke-WebRequest http://localhost:8080
@@ -93,28 +99,28 @@ docker logs portfolio-site-secure-local
 docker inspect --format "{{.State.Health.Status}}" portfolio-site-secure-local
 ```
 
-Stop the container:
+Stop the container when finished:
 
 ```powershell
 docker stop portfolio-site-secure-local
 ```
 
-## Scan the image and generate reports
+## Scan the image and create reports
 
-Run the scanner from Git Bash, WSL, or CI:
+Run the scanner from Git Bash or CI:
 
 ```bash
 bash devsecops/security-scan.sh portfolio-site-secure:local
 ```
 
-The reports are written to `devsecops/reports/`:
+The generated files are written to `devsecops/reports/`:
 
 - `vulnerability-report.sarif.json`
 - `vulnerability-report.txt`
 - `base-image-recommendations.txt`
 - `critical-exit-code`
 
-Generate the Excel summary with the virtual-environment interpreter:
+Create the Excel report with the virtual-environment interpreter:
 
 ```powershell
 .\.venv\Scripts\python.exe devsecops\generate-report.py `
@@ -124,61 +130,58 @@ Generate the Excel summary with the virtual-environment interpreter:
   --image portfolio-site-secure:local
 ```
 
-The Excel workbook includes a `Recommendations` worksheet populated from Docker Scout's base-image recommendations. These recommendations are advisory; the critical-vulnerability gate remains the deployment decision.
+The workbook includes vulnerability details, a severity summary, scan information, and Docker Scout base-image recommendations. Generated reports are intentionally ignored by Git because they can be recreated from a new scan.
 
-## Complete local pipeline
+## Run the complete local flow
 
-From Git Bash or WSL:
+From Git Bash:
 
 ```bash
 bash devsecops/CICD.sh
 ```
 
-The script builds `portfolio-site-secure:local`, scans it, creates the SARIF, text, and Excel reports, blocks deployment for critical vulnerabilities, and starts the container on `http://localhost:8080` only when the policy passes.
+The script builds the image, runs the secret and vulnerability checks, creates the reports, sends the optional Telegram notification, and starts the website only when the critical-vulnerability check passes.
 
 ## GitHub Actions
 
 The workflow in `.github/workflows/security-pipeline.yml` runs on pull requests and pushes to `main`:
 
-1. Installs the Python tooling.
-2. Checks tracked files with `detect-secrets-hook`.
-3. Builds `portfolio-site-secure:<commit-sha>`.
-4. Scans the image with Docker Scout.
-5. Generates an Excel report.
-6. Uploads scan artifacts.
-7. Blocks the job when critical vulnerabilities are present.
-8. Sends an optional Telegram notification with the Excel report attached when the required GitHub secrets exist.
+1. Sets up Python and the project tooling.
+2. Installs Docker Scout and authenticates to Docker Hub.
+3. Checks tracked files for secrets.
+4. Builds the image using the commit SHA as its tag.
+5. Scans the image and creates reports.
+6. Uploads the reports as workflow artifacts.
+7. Stops the job if the critical-vulnerability check fails.
+8. Sends the Excel report to Telegram when the Telegram secrets are configured.
 
-The workflow installs Docker Scout explicitly because Docker Desktop includes the Scout plugin locally, while a hosted CI runner may need the standalone CLI setup. A push to `main` automatically starts this workflow. A pull request runs the same security checks before merge. This project does not automatically deploy to production; the local script deploys only to the local Docker container after the critical gate passes.
+The workflow does not deploy to production. It verifies that the image is safe enough to continue through the pipeline. The local script is the part that starts a local Docker container.
 
-Add these GitHub repository secrets only if Telegram notifications are wanted:
-
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-
-Docker Scout also needs Docker Hub credentials in the hosted workflow. Create a Docker Hub access token with the minimum read-only scope and add these GitHub repository secrets:
+Add these GitHub repository secrets when needed:
 
 - `DOCKER_HUB_USERNAME`
 - `DOCKER_HUB_TOKEN`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
 
-When a pipeline failure occurs, the notifier attaches `devsecops/reports/vulnerability-report.xlsx`. If that file is unavailable, it sends the failure message without an attachment.
+Use a read-only Docker Hub token. Never place any of these values in the repository or in screenshots.
 
 ## Development flow
 
 ```text
 Create virtual environment
-        -> install development dependencies
-        -> run detect-secrets locally
-        -> run application smoke test
-        -> build image
-        -> scan image
-        -> review reports
-        -> merge only when the security gate passes
+        -> install dependencies
+        -> run the secret scan
+        -> test the website
+        -> build the image
+        -> scan the image
+        -> review the reports
+        -> merge only when the security check passes
 ```
 
 ## Troubleshooting
 
 - Docker daemon errors usually mean Docker Desktop is not running or the Linux engine is unavailable.
-- On Windows, run `CICD.sh` from Git Bash. PowerShell's `bash` command may open a WSL distro without Docker Desktop integration; alternatively enable Docker integration for that distro.
+- On Windows, run `CICD.sh` from Git Bash. PowerShell's `bash` command may open a WSL distro without Docker Desktop integration.
 - If the healthcheck is unhealthy, inspect `docker logs portfolio-site-secure-local` and verify that `http://localhost:8080` responds.
-- If `detect-secrets` reports a real credential, remove it from the repository, rotate it, and update the baseline only after the credential is no longer present.
+- If `detect-secrets` finds a real credential, remove it from the repository, rotate it, and update the baseline only after the credential is no longer present.

@@ -1,27 +1,26 @@
-# DevSecOps Project Evidence
+# Project Notes and Evidence
 
-This folder contains the recruiter-facing explanation and evidence for the DevSecOps portfolio project.
+This folder explains the security workflow in plain language and keeps the screenshots that show it working.
 
-## What this demonstrates
+## What I built
 
-- A Python virtual environment is created before installing project tooling.
-- `detect-secrets` checks the repository before the image build.
-- Docker Scout scans the built image and produces SARIF and text output.
-- A Python report generator creates a readable Excel workbook.
-- A critical-vulnerability policy blocks deployment instead of silently shipping a risky image.
-- Telegram can receive the generated Excel report as a document.
-- A base-image recommendation is evaluated and documented as remediation.
-- GitHub Actions automatically repeats the checks on pull requests and pushes to `main`.
+- A static website served from a small Nginx container.
+- A secret scan that runs before the image build.
+- A Docker Scout scan for packages and known vulnerabilities.
+- A Python report generator that creates an Excel summary.
+- A deployment check that stops the process when critical vulnerabilities are present.
+- Optional Telegram delivery of the Excel report.
+- GitHub Actions checks for pull requests and pushes to `main`.
 
-## Documents
+## Project notes
 
-- [`remediation.md`](remediation.md): baseline findings, remediation decision, validation steps, and residual risks.
-- [`architecture/architecture-diagram.png`](architecture/architecture-diagram.png): visual pipeline overview.
-- [`evidence/README.md`](evidence/README.md): screenshot index and evidence guidance.
-- [`evidence/docker-scout-recommendations.md`](evidence/docker-scout-recommendations.md): Docker Scout recommendation output and selected fix.
+- [`remediation.md`](remediation.md): what was found, what changed, and how the fix was tested.
+- [`architecture/architecture-diagram.png`](architecture/architecture-diagram.png): the pipeline overview.
+- [`evidence/README.md`](evidence/README.md): the screenshot index.
+- [`evidence/docker-scout-recommendations.md`](evidence/docker-scout-recommendations.md): the base-image recommendation and the selected fix.
 
-## Evidence policy
+## Evidence notes
 
-The screenshots in this folder are supporting evidence, not the source of truth. The reproducible commands in the root README and the generated reports under `devsecops/reports/` are authoritative for a new run. Do not commit Telegram bot tokens, chat IDs, `.env` files, or screenshots that expose them.
+The screenshots support the commands and generated reports; they are not a replacement for running the checks. The reproducible commands are in the root README. Generated files under `devsecops/reports/` are local outputs and are intentionally ignored by Git.
 
-The hosted GitHub Actions workflow authenticates to Docker Hub for Docker Scout using `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN`. Use a read-only token and store it only as GitHub repository secrets.
+Never commit `.env` files, bot tokens, chat IDs, Docker Hub tokens, or screenshots that expose secrets. The hosted workflow uses `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` as GitHub repository secrets for Docker Scout.

@@ -1,31 +1,29 @@
 # Evidence Index
 
-These screenshots document the reporting and notification flow. The first five images were captured from the baseline run that correctly blocked deployment because critical vulnerabilities were present.
+These files show the project before and after remediation. The first group captures the original blocked run; the second group captures the successful local and GitHub Actions runs.
 
-## Excel report evidence
+## Baseline run
 
-1. [`01-excel-vulnerabilities-sheet.png`](01-excel-vulnerabilities-sheet.png): detailed CVE, package, version, fix, score, and advisory columns.
-2. [`02-excel-scan-info-sheet.png`](02-excel-scan-info-sheet.png): image name, scan time, and vulnerability totals.
-3. [`03-excel-summary-sheet.png`](03-excel-summary-sheet.png): severity counts used for the policy decision.
-4. [`04-excel-recommendations-sheet.png`](04-excel-recommendations-sheet.png): Docker Scout base-image recommendations from the baseline image.
-5. [`docker-scout-recommendations.md`](docker-scout-recommendations.md): command output summary and remediation decision.
+- [`01-excel-vulnerabilities-sheet.png`](01-excel-vulnerabilities-sheet.png): the detailed vulnerability list.
+- [`02-excel-scan-info-sheet.png`](02-excel-scan-info-sheet.png): image and scan details.
+- [`03-excel-summary-sheet.png`](03-excel-summary-sheet.png): vulnerability counts by severity.
+- [`04-excel-recommendations-sheet.png`](04-excel-recommendations-sheet.png): Docker Scout base-image recommendations.
+- [`docker-scout-recommendations.md`](docker-scout-recommendations.md): the recommendation command and remediation decision.
+- [`05-telegram-report-attachment.png`](05-telegram-report-attachment.png): the Excel report delivered through Telegram after the blocked run.
 
-## Notification evidence
+## Successful local run
 
-6. [`05-telegram-report-attachment.png`](05-telegram-report-attachment.png): Telegram received the Excel report as a document and included the failed-gate context.
+- [`06-remediated-pipeline-success.png`](06-remediated-pipeline-success.png): the local pipeline completed and started the website.
+- [`07-remediated-excel-scan-info-sheet.png`](07-remediated-excel-scan-info-sheet.png): the remediated image shows zero vulnerabilities.
+- [`08-website-smoke-test.png`](08-website-smoke-test.png): the website responded successfully on port 8080.
+- [`09-container-health.png`](09-container-health.png): the Docker healthcheck returned `healthy`.
 
-## Remediated-run evidence
+## Successful GitHub Actions run
 
-The successful run should be stored with these names:
+- [`10-github-actions-success-summary.png`](10-github-actions-success-summary.png): the GitHub Actions security job passed.
+- [`11-github-actions-success-logs.png`](11-github-actions-success-logs.png): detailed logs from the successful job.
+- [`12-github-actions-checks-passed.png`](12-github-actions-checks-passed.png): the repository check status after the run.
 
-- `06-remediated-pipeline-success.png`: terminal output showing zero critical vulnerabilities and deployment success.
-- `07-remediated-excel-scan-info-sheet.png`: remediated image scan information showing zero vulnerabilities.
-- `08-website-smoke-test.png`: HTTP response or rendered website from `http://localhost:8080`.
-- `09-container-health.png`: Docker health status showing `healthy`.
-- [`10-github-actions-success-summary.png`](10-github-actions-success-summary.png): GitHub Actions security job completed successfully.
-- [`11-github-actions-success-logs.png`](11-github-actions-success-logs.png): detailed GitHub Actions logs supporting the successful run.
-- [`12-github-actions-checks-passed.png`](12-github-actions-checks-passed.png): compact GitHub status card showing all checks passed.
+The Node.js 20 message in the GitHub Actions logs is a platform warning, not a project failure. Keep it as context, but do not present it as a security issue.
 
-The Node.js 20 deprecation message visible in the logs is a warning from GitHub Actions, not a security-pipeline failure. Keep the screenshot as evidence, but do not describe that warning as an application failure.
-
-Never include `.env` contents, bot tokens, chat IDs, GitHub secrets, or a Telegram API URL containing a token in project screenshots.
+Do not include `.env` contents, bot tokens, chat IDs, GitHub secrets, Docker Hub tokens, or Telegram API URLs containing tokens in project screenshots.
